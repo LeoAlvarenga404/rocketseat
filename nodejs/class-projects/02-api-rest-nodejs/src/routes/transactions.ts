@@ -1,0 +1,94 @@
+import type { FastifyInstance } from "fastify";
+import { z } from "zod";
+import { knex } from "../database";
+import { randomUUID } from "node:crypto";
+import { checkSessionIdExists } from "../middlewares/check-session-id-exists";
+
+export async function transactionsRoutes(app: FastifyInstance) {
+  app.get(
+    "/",
+    {
+      preHandler: [checkSessionIdExists],
+    },
+    async (req, reply) => {
+      const { sessionId } = req.cookies;
+
+      const transactions = await knex("transactions")
+        .where("session_id", sessionId)
+        .select();
+
+      return { transactions };
+    }
+  );
+
+  app.get(
+    "/:id",
+    {
+      preHandler: [checkSessionIdExists],
+    },
+    async (req) => {
+      const getTransactionParamasSchema = z.object({
+        id: z.uuid(),
+      });
+
+      const { id } = getTransactionParamasSchema.parse(req.params);
+      const { sessionId } = req.cookies;
+
+      const transaction = await knex("transactions")
+        .where({
+          session_id: sessionId,
+          id,
+        })
+        .first();
+
+      return { transaction };
+    }
+  );
+
+  app.get(
+    "/summary",
+    {
+      preHandler: [checkSessionIdExists],
+    },
+    async (req) => {
+      const { sessionId } = req.cookies;
+
+      const summary = await knex("transactions")
+        .where("session_id", sessionId)
+        .sum("amount", { as: "amount" })
+        .first();
+
+      return { summary };
+    }
+  );
+
+  app.post("/", async (req, reply) => {
+    const createTransactionBodySchema = z.object({
+      title: z.string(),
+      amount: z.number(),
+      type: z.enum(["income", "outcome"]),
+    });
+
+    const { title, amount, type } = createTransactionBodySchema.parse(req.body);
+
+    let sessionId = req.cookies.sessionId;
+
+    if (!sessionId) {
+      sessionId = randomUUID();
+
+      reply.cookie("sessionId", sessionId, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      });
+    }
+
+    await knex("transactions").insert({
+      id: randomUUID(),
+      title,
+      amount: type === "income" ? amount : amount * -1,
+      session_id: sessionId,
+    });
+
+    reply.status(201).send();
+  });
+}
