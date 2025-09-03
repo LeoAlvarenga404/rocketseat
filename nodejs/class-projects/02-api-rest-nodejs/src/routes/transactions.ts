@@ -27,11 +27,11 @@ export async function transactionsRoutes(app: FastifyInstance) {
       preHandler: [checkSessionIdExists],
     },
     async (req) => {
-      const getTransactionParamasSchema = z.object({
+      const getTransactionParamsSchema = z.object({
         id: z.uuid(),
       });
 
-      const { id } = getTransactionParamasSchema.parse(req.params);
+      const { id } = getTransactionParamsSchema.parse(req.params);
       const { sessionId } = req.cookies;
 
       const transaction = await knex("transactions")
