@@ -3,6 +3,16 @@ import { Prisma } from "@prisma/client";
 import { UsersReposity } from "../users-repository";
 
 export class PrismaUsersRepository implements UsersReposity {
+  async findById(id: string) {
+    const user = await prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    return user;
+  }
+
   async findByEmail(email: string) {
     const user = await prisma.user.findUnique({
       where: {
@@ -10,7 +20,7 @@ export class PrismaUsersRepository implements UsersReposity {
       },
     });
 
-    return user
+    return user;
   }
   async create(data: Prisma.UserCreateInput) {
     const user = await prisma.user.create({

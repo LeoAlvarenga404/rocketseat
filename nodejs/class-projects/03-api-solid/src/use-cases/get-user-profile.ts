@@ -1,7 +1,6 @@
 import { UsersReposity } from "@/repositories/users-repository";
-import { InvalidCredentialsError } from "./errors/invalid-credentials-error";
-import { compare } from "bcryptjs";
 import { User } from "@prisma/client";
+import { ResourceNotFoundError } from "./errors/resource-not-found-error";
 
 interface GetUserProfileUseCaseRequest {
   userId: string;
@@ -20,10 +19,8 @@ export class GetUserProfileUseCase {
     const user = await this.usersRepository.findById(userId);
 
     if (!user) {
-      throw new InvalidCredentialsError();
+      throw new ResourceNotFoundError();
     }
-
- 
 
     return {
       user,
