@@ -1,15 +1,33 @@
 import fastify from "fastify";
 import { z, ZodError } from "zod";
-import { prisma } from "./lib/prisma";
-import { register } from "./http/controllers/register";
-import { appRoutes } from "./http/routes";
+import { userRoutes } from "./http/controllers/users/routes";
 import { env } from "./env";
+import fastifyJwt from "@fastify/jwt";
+import fastifyCookie from "@fastify/cookie";
+
+import { gymsRoutes } from "./http/controllers/gyms/routes";
+import { checkInsRoutes } from "./http/controllers/check-ins/routes";
 
 export const app = fastify();
 
-app.register(appRoutes);
+app.register(fastifyJwt, {
+  secret: env.JWT_SECRET,
+  cookie: {
+    cookieName: "refreshToken",
+    signed: false,
+  },
+  sign: {
+    expiresIn: "10m",
+  },
+});
 
-app.setErrorHandler((error, request, reply) => {
+app.register(fastifyCookie);
+
+app.register(userRoutes);
+app.register(gymsRoutes);
+app.register(checkInsRoutes);
+
+app.setErrorHandler((error, _, reply) => {
   if (error instanceof ZodError) {
     return reply
       .status(400)

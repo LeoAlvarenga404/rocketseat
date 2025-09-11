@@ -13,13 +13,45 @@ export async function authenticate(req: FastifyRequest, reply: FastifyReply) {
   const { email, password } = authenticateBodySchema.parse(req.body);
 
   try {
-
-    const authenticateUseCase = makeAuthenticateUseCase()
-
-    authenticateUseCase.execute({
+    const authenticateUseCase = makeAuthenticateUseCase();
+    const { user } = await authenticateUseCase.execute({
       email,
       password,
     });
+
+    const token = await reply.jwtSign(
+      {
+        role: user.role,
+      },
+      {
+        sign: {
+          sub: user.id,
+        },
+      }
+    );
+
+    const refreshtoken = await reply.jwtSign(
+      {
+        role: user.role,
+      },
+      {
+        sign: {
+          sub: user.id,
+          expiresIn: "7d",
+        },
+      }
+    );
+    return reply
+      .setCookie("refreshToken", refreshtoken, {
+        path: "/",
+        secure: true,
+        sameSite: true,
+        httpOnly: true,
+      })
+      .status(200)
+      .send({
+        token,
+      });
   } catch (err) {
     if (err instanceof InvalidCredentialsError) {
       return reply.status(400).send({ message: err.message });
@@ -27,6 +59,4 @@ export async function authenticate(req: FastifyRequest, reply: FastifyReply) {
 
     throw err;
   }
-
-  return reply.status(200).send();
 }
