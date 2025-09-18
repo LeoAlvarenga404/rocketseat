@@ -12,6 +12,7 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@faker-js/faker": "^10.0.0",
     "@types/node": "^24.4.0",
     "typescript": "^5.9.2",
     "vite-tsconfig-paths": "^5.1.4",

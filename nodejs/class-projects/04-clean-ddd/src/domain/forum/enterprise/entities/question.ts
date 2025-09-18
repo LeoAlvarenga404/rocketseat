@@ -3,7 +3,8 @@ import { Entity } from "@/core/entities/entity";
 import { UniqueEntityID } from "./value-objects/unique-entity-id";
 import { Optional } from "@/core/types/optional";
 import dayjs from "dayjs";
-interface QuestionProps {
+
+export interface QuestionProps {
   authorId: UniqueEntityID;
   bestAnswerId?: UniqueEntityID;
   title: string;
@@ -12,6 +13,7 @@ interface QuestionProps {
   createdAt: Date;
   updatedAt?: Date;
 }
+
 export class Question extends Entity<QuestionProps> {
   get authorId() {
     return this.props.authorId;
